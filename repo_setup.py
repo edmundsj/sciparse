@@ -3,7 +3,7 @@ import os
 import fileinput
 
 root_dir = os.getcwd()
-old_name = 'pytemplate'
+old_name = 'tabularasa'
 module_name = root_dir.split('/')[-1]
 
 

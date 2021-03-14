@@ -37,7 +37,7 @@ jobs:
 
     - name: Test with pytest, generate coverage report
       run: |
-        $CONDA/envs/anaconda-client-env/bin/pytest --cov=./tabularasa/source --cov-report xml
+        $CONDA/envs/anaconda-client-env/bin/pytest --cov=./sciparse/source --cov-report xml
 
     - name: Lint with flake8
       run: |
@@ -66,35 +66,35 @@ jobs:
       uses: pypa/gh-action-pypi-publish@master
       with:
         user: __token__
-        password: ${{ secrets.pypi_test_password }}
+        password: ${{ secrets.pypi_test_token }}
         repository_url: https://test.pypi.org/legacy/
         verbose: true
 
     - name: Download and install from TestPyPi
       run:
-        $CONDA/envs/anaconda-client-env/bin/pip install --index-url https://test.pypi.org/simple --extra-index-url https://pypi.org/simple tabularasa;
+        $CONDA/envs/anaconda-client-env/bin/pip install --index-url https://test.pypi.org/simple --extra-index-url https://pypi.org/simple sciparse;
 
-    - name: Show where tabularasa is located
+    - name: Show where sciparse is located
       run:
-        $CONDA/envs/anaconda-client-env/bin/pip show tabularasa;
+        $CONDA/envs/anaconda-client-env/bin/pip show sciparse;
 
     - name: Run testPyPi test suite
       run: 
-        $CONDA/envs/anaconda-client-env/bin/pytest $CONDA/envs/anaconda-client-env/lib/python3.8/site-packages/tabularasa/
+        $CONDA/envs/anaconda-client-env/bin/pytest $CONDA/envs/anaconda-client-env/lib/python3.8/site-packages/sciparse/
 
     - name: Deplay to PyPi
       uses: pypa/gh-action-pypi-publish@master
       if: github.ref == 'refs/heads/main'
       with:
         user: __token__
-        password: ${{ secrets.pypi_password }}
+        password: ${{ secrets.pypi_token }}
         verbose: true
 
     - name: Download aand install from PyPi
       run: 
-        $CONDA/envs/anaconda-client-env/bin/pip uninstall -y tabularasa;
-        $CONDA/envs/anaconda-client-env/bin/pip install tabularasa;
+        $CONDA/envs/anaconda-client-env/bin/pip uninstall -y sciparse;
+        $CONDA/envs/anaconda-client-env/bin/pip install sciparse;
 
     - name: Run PyPi test suite
       run: 
-        $CONDA/envs/anaconda-client-env/bin/pytest $CONDA/envs/anaconda-client-env/lib/python3.8/site-packages/tabularasa/
+        $CONDA/envs/anaconda-client-env/bin/pytest $CONDA/envs/anaconda-client-env/lib/python3.8/site-packages/sciparse/
