@@ -1,69 +1,13 @@
-# Template Github Repository
-[![Build](https://github.com/edmundsj/template/actions/workflows/python-package-conda.yml/badge.svg)](https://github.com/edmundsj/template/actions/workflows/python-package-conda.yml) [![docs](https://github.com/edmundsj/template/actions/workflows/build-docs.yml/badge.svg)](https://github.com/edmundsj/template/actions/workflows/build-docs.yml )[![codecov](https://codecov.io/gh/edmundsj/template/branch/main/graph/badge.svg?token=7L4PK4K0P3)](https://codecov.io/gh/edmundsj/template)
+# sciparse - Scientific Dataset parsing
+[![Build](https://github.com/edmundsj/sciparse/actions/workflows/python-package-conda.yml/badge.svg)](https://github.com/edmundsj/sciparse/actions/workflows/python-package-conda.yml) [![docs](https://github.com/edmundsj/sciparse/actions/workflows/build-docs.yml/badge.svg)](https://github.com/edmundsj/sciparse/actions/workflows/build-docs.yml) [![codecov](https://codecov.io/gh/edmundsj/sciparse/branch/main/graph/badge.svg?token=KS3FB8KS3Z)](https://codecov.io/gh/edmundsj/sciparse)
 
-This is a template repository for python projects which use sphinx for
-documentation, github actions for building, pytest and codecov for test
-coverage.
 
 
 ## Getting Started
-0. Choose a name for the new repository. Make sure it's available as a name on [testPyPi](https://test.pypi.org/)
-  and [PyPi](https://pypi.org/). Create a new directory with that chosen module name.
-
-1. Create a new repository on github with your chosen module name.
-
-2. Add this repositry to codecov: https://app.codecov.io/gh/edmundsj, and add the CODECOV_TOKEN secret to the github repository. You may need to login to codecov to refresh the repositories.
-
-3. Create a new authentication token on testPyPi and add it as a github secret named ``test_pypi_password``\*
-
-4. Create a new authentication token on PyPi and add it as a github secret named ``pypi_password``\*
-
-5. Clone this repository into your new directory
-
-    ```git clone https://github.com/edmundsj/template.git <MODULE_NAME>```
-
-6. Navigate into the cloned repository, and run the setup script. This will change all the names in the relevant setup files, using:
-
-    ```python repo_setup.py```
-
-If this does not work, you will need to do the following manually:
-
-6a. Change the git hooks location:
-
-    ```git config core.hooksPath .hooks```
-6b. Change this repository's name with 
-
-   ```git remote set-url origin <NEW_REPO_URL>```
-6c. In the ``setup.py``, ``.hooks/pre-commit``, and ``.github/workflows/python-package-conda`` files, change all instances of "pytemplate" to "MODULE_NAME". 
-
-6d. Push to the new repository 
-
-    ```git push -u origin main```
-
-7. Set github pages to use the ``docs/`` folder for github pages at the bottom of the "Settings" page
-8. Create a status badge from the '... -> Create Status Badge' in the github actions area separately for docs and build, and paste them in the README, as well as from codecov.
-9. If desired, once the build on the remote server finishes, replace the tokens from testPyPi and pyPi with ones that are restricted to this pyPi project.
-
-
-Done! Your repository should be viewable on github pages: 
-https://edmundsj.github.io/REPO_NAME/
-
-* Note - since the package does not already exist on pyPi or testPyPi you will need to create a token that has access to all your projects. This obviously isn't an optimal way of doing things, and this should really be changed. I may want to add a setup script which does all the renaming, changes github hooks, and does an initial deploy to pypi and testpypi. If you want after the first push, you can create a new token restricted to the newly-pushed project.
 
 ## Features
 
-- Github actions unit test integration via pytest
-- Github actions package management with conda
-- Github actions documentation build using sphinx and reST/markdown, with auto
-self-push to repository after successful build
-- Github pages documentation hosting/integration
-- Local commits hooks run full test suite
-- Coverage uploaded automatically to codecov after successful build
-- [FUTURE] Auto-deploy to pyPi/testpyPi after successful build
-
 ## Common Issues
-- Re-running builds on github actions will cause them to fail, as the build number deployed to PyPi depends on the github run number, which does not change if you restart a build.
-- Pypi deploy is failing due to swap files. not sure why.
 
 ## How to Use
 ### Adding Additional Unit Tests
