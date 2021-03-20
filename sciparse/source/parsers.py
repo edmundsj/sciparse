@@ -1,5 +1,18 @@
 import re
 import pandas as pd
+from ast import literal_eval
+
+def parse_default(filename):
+    """
+    Default parser for data. Assumes there is a single line of metadata at the top line in the form of a dictionary and the remainder is tabular and can be imported as a pandas DataFrame
+    """
+
+    with open(filename) as fh:
+        string_metadata = fh.readline().rstrip('\n')
+        metadata = literal_eval(string_metadata)
+        data = pd.read_csv(fh)
+
+    return data, metadata
 
 def parse_xrd(filename):
     """

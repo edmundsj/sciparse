@@ -5,7 +5,8 @@ import glob
 example_data = glob.glob('sciparse/examples/*')
 source_data = glob.glob('sciparse/source/*')
 test_data = glob.glob('sciparse/test/*')
-total_data = example_data + source_data + test_data
+test_data_data = glob.glob('sciparse/test/data/*')
+total_data = example_data + source_data + test_data + test_data_data
 package_data = [x.replace('sciparse/', '') for x in total_data]
 
 #raise ValueError(f'PACKAGE DATA: {package_data}')
