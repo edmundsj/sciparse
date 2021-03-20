@@ -1,2 +1,2 @@
-from sciparse.source.some_module import SomeClass
+from sciparse.source.parsers import parse_xrd
 from sciparse.test.shorthand import *

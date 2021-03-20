@@ -1,0 +1,40 @@
+;RAW4.00
+[RawHeader]
+Date=02/10/2021
+Time=18:34:23
+Increment=0.005
+ScanType=Locked Coupled
+Start=69.05
+Steps=14
+Time=1
+
+DriveName=Theta
+StartPosition=34
+
+DriveName=2Theta
+StartPosition=68
+
+DriveName=Phi
+StartPosition=180.13
+
+DriveName=Chi
+StartPosition=-0.972
+
+[Data]
+     Angle, Det1Disc1,
+     69.05,        24,
+    69.055,        30,
+     69.06,        28,
+    69.065,        40,
+     69.07,       132,
+    69.075,       272,
+     69.08,      3472,
+    69.085,     16368,
+     69.09,     21970,
+    69.095,     10562,
+      69.1,      1210,
+    69.105,       264,
+     69.11,       130,
+    69.115,        64,
+
+
