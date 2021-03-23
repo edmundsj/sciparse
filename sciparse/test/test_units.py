@@ -1,0 +1,188 @@
+import pytest
+import numpy as np
+import pandas as pd
+from numpy.testing import assert_equal, assert_allclose
+from sciparse import sampling_period, title_to_quantity, \
+         to_standard_quantity, frequency_bin_size, quantity_to_title, \
+         dict_to_string, string_to_dict, is_scalar
+from sciparse import assert_equal_qt
+
+def testExtractSamplingPeriod(ureg):
+    data = pd.DataFrame({'Time (ms)': [0, 0.1, 0.2, 0.3, 0.4],
+                         'Values': [0, 1, 2, 3, 4]})
+    actual_period = sampling_period(data, ureg)
+    desired_period = ureg.ms * 0.1
+    assert actual_period == desired_period
+
+def test_quantity_to_title(ureg):
+    quantity = ureg.mV*1.0
+    desired_title = 'voltage (mV)'
+    actual_title = quantity_to_title(quantity, ureg)
+    assert_equal(actual_title, desired_title)
+
+    quantity = ureg.nA**2*1.0
+    desired_title = 'power (nA ** 2)'
+    actual_title = quantity_to_title(quantity, ureg)
+    assert_equal(actual_title, desired_title)
+
+def test_quantity_to_title_with_name(ureg):
+    quantity = ureg.mV * 1.0
+    desired_name = 'photovoltage'
+    desired_title = 'photovoltage (mV)'
+    actual_title = quantity_to_title(quantity, ureg, desired_name)
+    assert_equal(actual_title, desired_title)
+
+def testExtractTimeUnits(ureg):
+    unit_string = 'time (s)'
+    desired_unit = 1 * ureg.s
+    actual_unit = title_to_quantity(unit_string, ureg)
+    assert desired_unit == actual_unit
+
+    unit_string = 'time (ms)'
+    desired_unit = 1 * ureg.ms
+    actual_unit = title_to_quantity(unit_string, ureg)
+    assert desired_unit == actual_unit
+
+    unit_string = 'time (us)'
+    desired_unit = 1 * ureg.us
+    actual_unit = title_to_quantity(unit_string, ureg)
+    assert desired_unit == actual_unit
+
+    unit_string = 'time (ns)'
+    desired_unit = 1 * ureg.ns
+    actual_unit = title_to_quantity(unit_string, ureg)
+    assert desired_unit == actual_unit
+
+    unit_string = 'time (ps)'
+    desired_unit = 1 * ureg.ps
+    actual_unit = title_to_quantity(unit_string, ureg)
+    assert desired_unit == actual_unit
+
+def testExtractElectricalUnits(ureg):
+    unit_string = 'Photocurrent (pA)'
+    desired_unit = 1 * ureg.pA
+    actual_unit = title_to_quantity(unit_string, ureg)
+    assert desired_unit == actual_unit
+
+    unit_string = 'Photocurrent (nA)'
+    desired_unit = 1 * ureg.nA
+    actual_unit = title_to_quantity(unit_string, ureg)
+    assert desired_unit == actual_unit
+
+    unit_string = 'current (uA)'
+    desired_unit = 1 * ureg.uA
+    actual_unit = title_to_quantity(unit_string, ureg)
+    assert desired_unit == actual_unit
+
+    unit_string = 'Jordans (mA)'
+    desired_unit = 1 * ureg.mA
+    actual_unit = title_to_quantity(unit_string, ureg)
+    assert desired_unit == actual_unit
+
+    unit_string = 'More Current (A)'
+    desired_unit = 1 * ureg.A
+    actual_unit = title_to_quantity(unit_string, ureg)
+    assert desired_unit == actual_unit
+
+    unit_string = 'Photovoltage (V)'
+    desired_unit = 1 * ureg.V
+    actual_unit = title_to_quantity(unit_string, ureg)
+    assert desired_unit == actual_unit
+
+    unit_string = 'Photovoltage (mV)'
+    desired_unit = 1 * ureg.mV
+    actual_unit = title_to_quantity(unit_string, ureg)
+    assert desired_unit == actual_unit
+
+    unit_string = 'Photovoltage (uV)'
+    desired_unit = 1 * ureg.uV
+    actual_unit = title_to_quantity(unit_string, ureg)
+    assert desired_unit == actual_unit
+
+    unit_string = 'Photovoltage (nV)'
+    desired_unit = 1 * ureg.nV
+    actual_unit = title_to_quantity(unit_string, ureg)
+    assert desired_unit == actual_unit
+
+def testExtractSquaredUnits(ureg):
+    unit_string = 'voltage (mV^2)'
+    desired_unit = 1 * ureg.mV ** 2
+    actual_unit = title_to_quantity(unit_string, ureg)
+    assert desired_unit == actual_unit
+
+def test_title_to_quantity_squared_2(ureg):
+    unit_string = 'voltage (mV ** 2)'
+    desired_unit = 1 * ureg.mV ** 2
+    actual_unit = title_to_quantity(unit_string, ureg)
+    assert desired_unit == actual_unit
+
+def test_title_to_quantity_name(ureg):
+    unit_string = 'photovoltage (kV)'
+    desired_name = 'photovoltage'
+    desired_unit = 1 * ureg.kV
+    actual_unit, actual_name = title_to_quantity(
+            unit_string, ureg, return_name=True)
+    assert_equal_qt(actual_unit, desired_unit)
+    assert_equal(actual_name, desired_name)
+
+def testToStandardUnit(ureg):
+    quantity = 0.1 * ureg.mV
+    desired_quantity = 0.1 * 1e-3 * ureg.V
+    actual_quantity = to_standard_quantity(quantity, ureg)
+    assert desired_quantity == actual_quantity
+
+    quantity = 0.1 * ureg.mV ** 2
+    desired_quantity = 0.1 * 1e-6 * ureg.V ** 2
+    actual_quantity = to_standard_quantity(quantity, ureg)
+    assert desired_quantity == actual_quantity
+
+def test_frequency_bin_size(ureg):
+    psd_data = pd.DataFrame({
+            'frequency (Hz)': [1.5, 3.0, 4.5],
+            'power (V^2)': [0, 1, 2]})
+    actual_quantity = frequency_bin_size(psd_data, ureg)
+    desired_quantity = 1*ureg.Hz*1.5
+    assert actual_quantity == desired_quantity
+
+def test_dict_to_string(ureg):
+    metadata = {
+        'wavelength': 10 * ureg.nm,
+        'material': 'Al',
+        'replicate': 2}
+
+    actual_string = dict_to_string(metadata, ureg)
+    desired_dict = {
+        'wavelength (nm)': 10,
+        'material': 'Al',
+        'replicate': 2}
+    assert_equal(actual_string, str(desired_dict))
+
+def test_string_to_dict(ureg):
+    input_string = "{'wavelength (nm)': 10, 'material': 'Al', 'replicate': 2}"
+    desired_dict = {
+        'wavelength': 10*ureg.nm,
+        'material': 'Al',
+        'replicate': 2}
+    actual_dict = string_to_dict(input_string, ureg)
+    assert_equal(actual_dict, desired_dict)
+
+def test_is_scalar(ureg):
+    quantity = 5 * ureg.Hz
+    data_scalar_actual = is_scalar(quantity)
+    data_scalar_desired = True
+    assert_equal(data_scalar_actual, data_scalar_desired)
+
+    quantity = 6.0 * ureg.Hz
+    data_scalar_actual = is_scalar(quantity)
+    data_scalar_desired = True
+    assert_equal(data_scalar_actual, data_scalar_desired)
+
+    quantity = 6.0
+    data_scalar_actual = is_scalar(quantity)
+    data_scalar_desired = True
+    assert_equal(data_scalar_actual, data_scalar_desired)
+
+    quantity = np.array([6.0, 2.5]) * ureg.Hz
+    data_scalar_actual = is_scalar(quantity)
+    data_scalar_desired = False
+    assert_equal(data_scalar_actual, data_scalar_desired)

@@ -1,0 +1,143 @@
+import pint
+import re
+from ast import literal_eval
+
+def sampling_period(data, ureg):
+    """
+    Extracts the sample period from a pandas DataFrame assuming that data is evenly spaced in time. Uses the difference in time between the first and second data points to determine the sampling period  and sampling frequency.
+
+    :param data: Pandas array with Time (including units, i.e. Time (ms))
+    :returns sampling_period: Sampling period as a pint quantity
+    """
+    # For now, assume time is the first variable in the column
+    columns_names = data.columns.values
+    time_column = 0
+    time_string = columns_names[time_column]
+    delta_time = data[time_string][1] - data[time_string][0]
+
+    sampling_period = delta_time * title_to_quantity(time_string, ureg)
+    return sampling_period
+
+def frequency_bin_size(data, ureg):
+    """
+    Extracts the frequency bin (in Hz, as a pint unit) from a PSD dataset.
+
+    :param data: Input power spectral density as a Pandas Array
+    :returns bin_size: frequency bin size as a pint unit
+    """
+    column_names = data.columns.values
+    frequency_column = 0
+    frequency_string = column_names[frequency_column]
+    delta_frequency = data[frequency_string].iloc[1] - data[frequency_string].iloc[0]
+
+    bin_size = delta_frequency * title_to_quantity(frequency_string, ureg)
+    return bin_size
+
+def title_to_quantity(title_string, ureg, return_name=False):
+    """
+    Extracts unit from a column name such as Time (ms).
+
+    :param title_string: The string to look for the unit
+    :param return_name: Whether to return a tuple containing the base name and the unit.
+    """
+    # Search for anything in parentheses, interpret as a unit.
+    # Squared units are fine.
+    unit_pattern = re.compile(r'[\(][\w]+[\^]*[\s]*[\*]*[\s]*[\d]*[\)]')
+    match = unit_pattern.search(title_string)
+    if match == None:
+        quantity = None
+        bare_unit_string = ''
+    else:
+        bare_unit_string = match.group() # remove parentheses
+        quantity = 1 * ureg.parse_expression(bare_unit_string)
+
+    if return_name:
+        name = title_string.replace(bare_unit_string, '').rstrip()
+        return quantity, name
+    else:
+        return quantity
+
+def quantity_to_title(quantity, ureg, name=None):
+    """
+    Converts a quantity into a standard title
+    """
+    standard_mapping = {
+        ureg.V: 'voltage',
+        ureg.A: 'current',
+        ureg.ohm: 'impedance',
+        ureg.V**2: 'power',
+        ureg.A**2: 'power',
+        ureg.ohm**2: 'power',
+        ureg.Hz: 'frequency',
+        ureg.m: 'wavelength',
+        ureg.s: 'time',
+        ureg.degK: 'temperature',
+        ureg.degC: 'temperature',
+        ureg.degF: 'temperature',
+    }
+    if not name:
+        standard_unit = to_standard_quantity(quantity, ureg).units
+        title_prefix = standard_mapping[standard_unit]
+    else:
+        title_prefix = name
+
+    title = title_prefix + ' ({:~})'.format(quantity.units)
+    return title
+
+def to_standard_quantity(quantity, ureg):
+    """
+    :param quantity: Pint quantity in non-standard form (i.e. mV)
+    """
+    unit = quantity.units
+    return_tuple = ureg.parse_unit_name(str(unit))
+    if len(return_tuple) == 1:
+        (prefix, base_unit, _) = return_tuple[0]
+    else: # We have some power quantities to deal with
+        unit_power = int(str(unit)[-1])
+        unit_base_str = str(unit)[:-5]
+        (prefix, base_unit, _) = ureg.parse_unit_name(unit_base_str)[0]
+        base_unit = ureg.Quantity(1, base_unit)**unit_power
+
+    new_quantity = quantity.magnitude * ureg.Quantity(1, unit).to(base_unit)
+    return new_quantity
+
+def is_scalar(quantity):
+    data_is_scalar =  isinstance(quantity, (int, float))
+    if isinstance(quantity, pint.Quantity):
+        data_is_scalar = isinstance(quantity.magnitude, (int, float))
+    return data_is_scalar
+
+def dict_to_string(metadata, ureg):
+    """
+    Converts a dictionary, potentially containing pint units, into a human- and machine-readable string
+
+    :param metadata: Dictionary of metadata to be saved
+    """
+    dict_to_write = {}
+    for k, v in metadata.items():
+        if isinstance(v, pint.Quantity):
+            name_string = quantity_to_title(v, ureg, name=k)
+            value = v.magnitude
+        else:
+            name_string = str(k)
+            value = v
+        dict_to_write[name_string] = value
+    return str(dict_to_write)
+
+def string_to_dict(metadata_string, ureg):
+    """
+    Converts a human-readable string into a dictionary, with pint units as applicable.
+
+    :param metadata_string: The string to be converted into a set of metadata
+    """
+    input_dict = literal_eval(metadata_string)
+    return_dict = {}
+    for k, v in input_dict.items():
+        quantity, name = title_to_quantity(k, ureg, return_name=True)
+        if quantity:
+            return_dict[name] = quantity * v
+        else:
+            return_dict[k] = v
+
+    return return_dict
+
