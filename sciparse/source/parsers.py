@@ -1,18 +1,33 @@
 import re
 import pandas as pd
-from ast import literal_eval
+from sciparse import string_to_dict, dict_to_string
 
-def parse_default(filename):
+def parse_default(
+        filename, data=None, metadata=None, read_write='r'):
     """
     Default parser for data. Assumes there is a single line of metadata at the top line in the form of a dictionary and the remainder is tabular and can be imported as a pandas DataFrame
+
+    :param filename: Name of the file to be written
+    :param data: Data to write to file
+    :param metadata: Metadata to write to file
+    :param read_write: "r" or "w". Read or write.
     """
 
-    with open(filename) as fh:
-        string_metadata = fh.readline().rstrip('\n')
-        metadata = literal_eval(string_metadata)
-        data = pd.read_csv(fh)
+    if read_write == 'r':
+        with open(filename) as fh:
+            string_metadata = fh.readline().rstrip('\n')
+            metadata = string_to_dict(string_metadata)
+            data = pd.read_csv(fh)
 
-    return data, metadata
+        return data, metadata
+    elif read_write == 'w':
+        with open(filename) as fh:
+            metadata_line = dict_to_string(metadata) + '\n'
+            fh.write(metadata_line)
+            if isinstance(data, pd.DataFrame):
+                data.to_csv(fh, mode='a', index=False)
+            else:
+                raise ValueError(f'This method only implemented for type of pd.DataFrame, you attempted to pass in type {type(data)}.')
 
 def parse_xrd(filename):
     """

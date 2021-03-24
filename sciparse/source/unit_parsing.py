@@ -1,8 +1,9 @@
 import pint
 import re
 from ast import literal_eval
+from sciparse import ureg
 
-def sampling_period(data, ureg):
+def sampling_period(data):
     """
     Extracts the sample period from a pandas DataFrame assuming that data is evenly spaced in time. Uses the difference in time between the first and second data points to determine the sampling period  and sampling frequency.
 
@@ -15,10 +16,10 @@ def sampling_period(data, ureg):
     time_string = columns_names[time_column]
     delta_time = data[time_string][1] - data[time_string][0]
 
-    sampling_period = delta_time * title_to_quantity(time_string, ureg)
+    sampling_period = delta_time * title_to_quantity(time_string)
     return sampling_period
 
-def frequency_bin_size(data, ureg):
+def frequency_bin_size(data):
     """
     Extracts the frequency bin (in Hz, as a pint unit) from a PSD dataset.
 
@@ -30,10 +31,10 @@ def frequency_bin_size(data, ureg):
     frequency_string = column_names[frequency_column]
     delta_frequency = data[frequency_string].iloc[1] - data[frequency_string].iloc[0]
 
-    bin_size = delta_frequency * title_to_quantity(frequency_string, ureg)
+    bin_size = delta_frequency * title_to_quantity(frequency_string)
     return bin_size
 
-def title_to_quantity(title_string, ureg, return_name=False):
+def title_to_quantity(title_string, return_name=False):
     """
     Extracts unit from a column name such as Time (ms).
 
@@ -57,7 +58,7 @@ def title_to_quantity(title_string, ureg, return_name=False):
     else:
         return quantity
 
-def quantity_to_title(quantity, ureg, name=None):
+def quantity_to_title(quantity, name=None):
     """
     Converts a quantity into a standard title
     """
@@ -74,9 +75,12 @@ def quantity_to_title(quantity, ureg, name=None):
         ureg.degK: 'temperature',
         ureg.degC: 'temperature',
         ureg.degF: 'temperature',
+        ureg.J: 'energy',
+        ureg.W: 'power',
+        ureg.Unit('dimensionless'): '',
     }
     if not name:
-        standard_unit = to_standard_quantity(quantity, ureg).units
+        standard_unit = to_standard_quantity(quantity).units
         title_prefix = standard_mapping[standard_unit]
     else:
         title_prefix = name
@@ -84,7 +88,7 @@ def quantity_to_title(quantity, ureg, name=None):
     title = title_prefix + ' ({:~})'.format(quantity.units)
     return title
 
-def to_standard_quantity(quantity, ureg):
+def to_standard_quantity(quantity):
     """
     :param quantity: Pint quantity in non-standard form (i.e. mV)
     """
@@ -92,11 +96,13 @@ def to_standard_quantity(quantity, ureg):
     return_tuple = ureg.parse_unit_name(str(unit))
     if len(return_tuple) == 1:
         (prefix, base_unit, _) = return_tuple[0]
-    else: # We have some power quantities to deal with
+    elif len(return_tuple) == 0 and not quantity.dimensionless:
         unit_power = int(str(unit)[-1])
         unit_base_str = str(unit)[:-5]
         (prefix, base_unit, _) = ureg.parse_unit_name(unit_base_str)[0]
         base_unit = ureg.Quantity(1, base_unit)**unit_power
+    elif quantity.dimensionless:
+        base_unit = ureg.Quantity(1)
 
     new_quantity = quantity.magnitude * ureg.Quantity(1, unit).to(base_unit)
     return new_quantity
@@ -107,7 +113,7 @@ def is_scalar(quantity):
         data_is_scalar = isinstance(quantity.magnitude, (int, float))
     return data_is_scalar
 
-def dict_to_string(metadata, ureg):
+def dict_to_string(metadata):
     """
     Converts a dictionary, potentially containing pint units, into a human- and machine-readable string
 
@@ -116,7 +122,7 @@ def dict_to_string(metadata, ureg):
     dict_to_write = {}
     for k, v in metadata.items():
         if isinstance(v, pint.Quantity):
-            name_string = quantity_to_title(v, ureg, name=k)
+            name_string = quantity_to_title(v, name=k)
             value = v.magnitude
         else:
             name_string = str(k)
@@ -124,7 +130,7 @@ def dict_to_string(metadata, ureg):
         dict_to_write[name_string] = value
     return str(dict_to_write)
 
-def string_to_dict(metadata_string, ureg):
+def string_to_dict(metadata_string):
     """
     Converts a human-readable string into a dictionary, with pint units as applicable.
 
@@ -133,7 +139,7 @@ def string_to_dict(metadata_string, ureg):
     input_dict = literal_eval(metadata_string)
     return_dict = {}
     for k, v in input_dict.items():
-        quantity, name = title_to_quantity(k, ureg, return_name=True)
+        quantity, name = title_to_quantity(k, return_name=True)
         if quantity:
             return_dict[name] = quantity * v
         else:
