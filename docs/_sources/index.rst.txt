@@ -1,10 +1,14 @@
 .. _template-name:
 .. Documentation for Template
 
-Welcome to a Github Template
+sciparse API
 =============================================
 
-.. .. autoclass:: LIA.LIA
+.. automodule:: unit_parsing
+    :members:
+    :undoc-members:
+
+.. automodule:: parsers
     :members:
     :undoc-members:
 

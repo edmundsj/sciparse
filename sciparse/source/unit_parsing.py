@@ -147,3 +147,24 @@ def string_to_dict(metadata_string):
 
     return return_dict
 
+def column_from_unit(data, unit):
+    """
+    Extracts the pandas column corresponding to a particular unit quantities. If there are multiple columns, it gives back the first one. Assumes columns names are of the form "Quantity Name (unit)", i.e. Voltage (mV) or Photocurrent (nA).
+
+    :param data: Pandas dataframe to extract column from
+    :param unit: Pint unit of the desired column. Data will be returned in terms of this unit
+    """
+    column_names = data.columns.values
+    desired_unit_std = to_standard_quantity(1*unit).units
+
+    column_quantities = [(i, title_to_quantity(c)) for i, c in enumerate(column_names)]
+    column_units_std = [(i, to_standard_quantity(q).units) for (i, q) in column_quantities if q]
+    column_matches = [(i, u == desired_unit_std) for i, u in column_units_std]
+    column_indices = [i for i, b in column_matches if b == True]
+    if len(column_matches) == 0:
+        raise ValueError(f'ERROR: Could not find unit {unit} in data. Available column names are {column_names}')
+    else:
+        index = column_indices[0]
+        column_unit = column_quantities[index][1].to(unit)
+        return column_unit * data.iloc[:,index].values
+

@@ -4,8 +4,8 @@ import pandas as pd
 from numpy.testing import assert_equal, assert_allclose
 from sciparse import sampling_period, title_to_quantity, \
          to_standard_quantity, frequency_bin_size, quantity_to_title, \
-         dict_to_string, string_to_dict, is_scalar
-from sciparse import assert_equal_qt, ureg
+         dict_to_string, string_to_dict, is_scalar, column_from_unit
+from sciparse import assert_allclose_qt, assert_equal_qt, ureg
 
 def testExtractSamplingPeriod():
     data = pd.DataFrame({'Time (ms)': [0, 0.1, 0.2, 0.3, 0.4],
@@ -186,3 +186,32 @@ def test_is_scalar():
     data_scalar_actual = is_scalar(quantity)
     data_scalar_desired = False
     assert_equal(data_scalar_actual, data_scalar_desired)
+
+def test_column_from_unit():
+    input_data = pd.DataFrame({
+        'Time (ms)': [0, 1, 2, 3],
+        'Photovoltage (nV)': [0, 1, 4, 5]})
+    desired_data = ureg.uV * 1e-3 * np.array([0., 1, 4, 5])
+    actual_data = column_from_unit(input_data, ureg.uV)
+    assert_allclose_qt(actual_data, desired_data, atol=1e-12)
+
+    desired_data = ureg.s * 1e-3 * np.array([0, 1, 2, 3])
+    actual_data = column_from_unit(input_data, ureg.s)
+    assert_allclose_qt(actual_data, desired_data, atol=1e-12)
+
+def test_column_from_unit_extra():
+    input_data = pd.DataFrame({
+        'Time': [0, 1, 2, 3],
+        'Photovoltage (nV)': [0, 1, 4, 5],
+        'Sync': [0, 0, 2, 1]
+        })
+    desired_data = ureg.uV * 1e-3 * np.array([0., 1, 4, 5])
+    actual_data = column_from_unit(input_data, ureg.uV)
+    assert_allclose_qt(actual_data, desired_data, atol=1e-12)
+
+
+def test_column_not_found():
+    input_data = pd.DataFrame({})
+    with pytest.raises(ValueError):
+        column_from_unit(input_data, ureg.ms)
+
