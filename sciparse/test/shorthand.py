@@ -10,8 +10,7 @@ def assert_equal_qt(actual_data, desired_data):
             isinstance(desired_data, pint.Quantity):
         assert_equal(isinstance(actual_data, pint.Quantity), True)
         assert_equal(isinstance(desired_data, pint.Quantity), True)
-        with warnings.catch_warnings(record=True):
-            assert_equal(np.array(actual_data), np.array(desired_data))
+        assert_equal(actual_data.magnitude, desired_data.magnitude)
         assert actual_data.units == desired_data.units
 
 def assert_allclose_qt(
@@ -23,8 +22,7 @@ def assert_allclose_qt(
             isinstance(desired_data, pint.Quantity):
         assert_equal(isinstance(actual_data, pint.Quantity), True)
         assert_equal(isinstance(desired_data, pint.Quantity), True)
-        with warnings.catch_warnings(record=True):
-            assert_allclose(
-                    np.array(actual_data), np.array(desired_data),
-                    atol=atol, rtol=rtol)
+        assert_allclose(
+                actual_data.magnitude, desired_data.magnitude,
+                atol=atol, rtol=rtol)
         assert actual_data.units == desired_data.units
