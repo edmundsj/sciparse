@@ -4,7 +4,8 @@ import pandas as pd
 from numpy.testing import assert_equal, assert_allclose
 from sciparse import sampling_period, title_to_quantity, \
          to_standard_quantity, frequency_bin_size, quantity_to_title, \
-         dict_to_string, string_to_dict, is_scalar, column_from_unit
+         dict_to_string, string_to_dict, is_scalar, column_from_unit, \
+         cname_from_unit
 from sciparse import assert_allclose_qt, assert_equal_qt, ureg
 
 def testExtractSamplingPeriod():
@@ -215,3 +216,12 @@ def test_column_not_found():
     with pytest.raises(ValueError):
         column_from_unit(input_data, ureg.ms)
 
+def test_cname_from_unit():
+    input_data = pd.DataFrame({
+        'Time': [0, 1, 2, 3],
+        'Photovoltage (nV)': [0, 1, 4, 5],
+        'Sync': [0, 0, 2, 1]
+        })
+    desired_name = 'Photovoltage (nV)'
+    actual_name = cname_from_unit(input_data, ureg.V)
+    assert_equal(actual_name, desired_name)
