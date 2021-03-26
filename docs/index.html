@@ -149,6 +149,20 @@
   <span class="target" id="template-name"></span><div class="section" id="module-unit_parsing">
 <span id="sciparse-api"></span><h1>sciparse API<a class="headerlink" href="#module-unit_parsing" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
+<dt id="unit_parsing.cname_from_unit">
+<code class="sig-prename descclassname">unit_parsing.</code><code class="sig-name descname">cname_from_unit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">unit</span></em><span class="sig-paren">)</span><a class="headerlink" href="#unit_parsing.cname_from_unit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts the column name from a pandas array where the column name has a label indicating the desired unit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – Pandas Dataframe containing the column you want to extract</p></li>
+<li><p><strong>unit</strong> – pint unit you would like to match the column to (i.e. ureg.mV)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt id="unit_parsing.column_from_unit">
 <code class="sig-prename descclassname">unit_parsing.</code><code class="sig-name descname">column_from_unit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">unit</span></em><span class="sig-paren">)</span><a class="headerlink" href="#unit_parsing.column_from_unit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Extracts the pandas column corresponding to a particular unit quantities. If there are multiple columns, it gives back the first one. Assumes columns names are of the form “Quantity Name (unit)”, i.e. Voltage (mV) or Photocurrent (nA).</p>
