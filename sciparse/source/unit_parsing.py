@@ -14,6 +14,8 @@ def sampling_period(data):
     columns_names = data.columns.values
     time_column = 0
     time_string = columns_names[time_column]
+    if len(data) < 2:
+        raise ValueError(f'Data does not have enough points to compute a sampling period. Only has {len(data)} ponits')
     delta_time = data[time_string][1] - data[time_string][0]
 
     sampling_period = delta_time * title_to_quantity(time_string)
@@ -29,6 +31,8 @@ def frequency_bin_size(data):
     column_names = data.columns.values
     frequency_column = 0
     frequency_string = column_names[frequency_column]
+    if len(data) < 2:
+        raise ValueError(f'Data does not have enough points to compute a frequency bin size. Only has {len(data)} ponits')
     delta_frequency = data[frequency_string].iloc[1] - data[frequency_string].iloc[0]
 
     bin_size = delta_frequency * title_to_quantity(frequency_string)

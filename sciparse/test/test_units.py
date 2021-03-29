@@ -9,12 +9,24 @@ from sciparse import sampling_period, title_to_quantity, \
 from sciparse import assert_allclose_qt, assert_equal_qt, ureg
 from xsugar import assertDataDictEqual
 
-def testExtractSamplingPeriod():
+def test_sampling_period():
     data = pd.DataFrame({'Time (ms)': [0, 0.1, 0.2, 0.3, 0.4],
                          'Values': [0, 1, 2, 3, 4]})
     actual_period = sampling_period(data)
     desired_period = ureg.ms * 0.1
     assert actual_period == desired_period
+
+def test_sampling_period_error():
+    data = pd.DataFrame({'Time (ms)': [0],
+                         'Values': [0]})
+    with pytest.raises(ValueError):
+        actual_period = sampling_period(data)
+
+def test_frequency_bin_error():
+    data = pd.DataFrame({'frequency (Hz)': [0],
+                         'Values': [0]})
+    with pytest.raises(ValueError):
+        actual_bin = frequency_bin_size(data)
 
 def test_quantity_to_title():
     quantity = ureg.mV*1.0
@@ -217,7 +229,6 @@ def test_column_from_unit_extra():
     desired_data = ureg.uV * 1e-3 * np.array([0., 1, 4, 5])
     actual_data = column_from_unit(input_data, ureg.uV)
     assert_allclose_qt(actual_data, desired_data, atol=1e-12)
-
 
 def test_column_not_found():
     input_data = pd.DataFrame({})
