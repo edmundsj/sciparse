@@ -43,17 +43,19 @@ def title_to_quantity(title_string, return_name=False):
     """
     # Search for anything in parentheses, interpret as a unit.
     # Squared units are fine.
-    unit_pattern = re.compile(r'[\(][\w]+[\^]*[\s]*[\*]*[\s]*[\d]*[\)]')
+    unit_pattern = re.compile(r'\(.*\)') # Find the thing in parentheses.
     match = unit_pattern.search(title_string)
     if match == None:
-        quantity = None
+        quantity = ureg.Quantity(1)
         bare_unit_string = ''
+        unit_string_parens = ''
     else:
-        bare_unit_string = match.group() # remove parentheses
+        bare_unit_string = match.group()[1:-1] # remove parentheses
+        unit_string_parens = match.group()
         quantity = 1 * ureg.parse_expression(bare_unit_string)
 
     if return_name:
-        name = title_string.replace(bare_unit_string, '').rstrip()
+        name = title_string.replace(unit_string_parens , '').rstrip()
         return quantity, name
     else:
         return quantity
@@ -68,6 +70,8 @@ def quantity_to_title(quantity, name=None):
         ureg.ohm: 'impedance',
         ureg.V**2: 'power',
         ureg.A**2: 'power',
+        ureg.V**2/ureg.Hz: 'PSD',
+        ureg.A**2/ureg.Hz: 'PSD',
         ureg.ohm**2: 'power',
         ureg.Hz: 'frequency',
         ureg.m: 'wavelength',
@@ -85,7 +89,11 @@ def quantity_to_title(quantity, name=None):
     else:
         title_prefix = name
 
-    title = title_prefix + ' ({:~})'.format(quantity.units)
+    if quantity.dimensionless:
+        title = title_prefix
+    else:
+        title = title_prefix + ' ({:~})'.format(quantity.units)
+
     return title
 
 def to_standard_quantity(quantity):
@@ -93,16 +101,43 @@ def to_standard_quantity(quantity):
     :param quantity: Pint quantity in non-standard form (i.e. mV)
     """
     unit = quantity.units
-    return_tuple = ureg.parse_unit_name(str(unit))
-    if len(return_tuple) == 1:
-        (prefix, base_unit, _) = return_tuple[0]
-    elif len(return_tuple) == 0 and not quantity.dimensionless:
-        unit_power = int(str(unit)[-1])
-        unit_base_str = str(unit)[:-5]
-        (prefix, base_unit, _) = ureg.parse_unit_name(unit_base_str)[0]
-        base_unit = ureg.Quantity(1, base_unit)**unit_power
-    elif quantity.dimensionless:
+    if quantity.dimensionless:
         base_unit = ureg.Quantity(1)
+
+    unit_str_list = re.split(r' / | \* ', str(unit))
+    quantity_list = [ureg.parse_expression(unit_str) \
+            for unit_str in unit_str_list]
+
+    if len(quantity_list) == 1 and not quantity.dimensionless:
+        target_quantity = quantity_list[0]
+        contains_power = '**' in str(target_quantity)
+        if contains_power: # We have a power to deal with
+            unit_power = int(str(unit)[-1])
+            unit_base_str = str(unit)[:-5]
+            return_tuple = ureg.parse_unit_name(str(unit_base_str))
+            (prefix, base_unit, _) = return_tuple[0]
+            base_unit = ureg.Quantity(1, base_unit)**unit_power
+        else:
+            return_tuple = ureg.parse_unit_name(str(unit))
+            (prefix, base_unit, _) = return_tuple[0]
+
+    elif len(quantity_list) > 1 and not quantity.dimensionless:
+        standard_quantity_list = \
+            [to_standard_quantity(q) for q in quantity_list]
+        multiplication_locations = \
+            [x.span()[0] for x in re.finditer(r' \* ', str(quantity))]
+        division_locations = \
+            [x.span()[0] for x in re.finditer(r' / ', str(quantity))]
+        operator_locations = multiplication_locations + division_locations
+        operator_locations.sort()
+        base_unit = standard_quantity_list[0]
+        for q in standard_quantity_list[1:]:
+            next_index = operator_locations.pop(0)
+            if next_index in multiplication_locations:
+                base_unit *= q
+            elif next_index in division_locations:
+                base_unit /= q
+
 
     new_quantity = quantity.magnitude * ureg.Quantity(1, unit).to(base_unit)
     return new_quantity
@@ -140,7 +175,7 @@ def string_to_dict(metadata_string):
     return_dict = {}
     for k, v in input_dict.items():
         quantity, name = title_to_quantity(k, return_name=True)
-        if quantity:
+        if quantity.dimensionless == False:
             return_dict[name] = quantity * v
         else:
             return_dict[k] = v

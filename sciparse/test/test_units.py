@@ -7,6 +7,7 @@ from sciparse import sampling_period, title_to_quantity, \
          dict_to_string, string_to_dict, is_scalar, column_from_unit, \
          cname_from_unit
 from sciparse import assert_allclose_qt, assert_equal_qt, ureg
+from xsugar import assertDataDictEqual
 
 def testExtractSamplingPeriod():
     data = pd.DataFrame({'Time (ms)': [0, 0.1, 0.2, 0.3, 0.4],
@@ -105,7 +106,7 @@ def testExtractElectricalUnits(ureg):
     actual_unit = title_to_quantity(unit_string)
     assert desired_unit == actual_unit
 
-def testExtractSquaredUnits(ureg):
+def testExtractSquaredUnits():
     unit_string = 'voltage (mV^2)'
     desired_unit = 1 * ureg.mV ** 2
     actual_unit = title_to_quantity(unit_string)
@@ -120,10 +121,10 @@ def test_title_to_quantity_squared_2():
 def test_title_to_quantity_name():
     unit_string = 'photovoltage (kV)'
     desired_name = 'photovoltage'
-    desired_unit = 1 * ureg.kV
-    actual_unit, actual_name = title_to_quantity(
+    desired_quantity = 1 * ureg.kV
+    actual_quantity, actual_name = title_to_quantity(
             unit_string, return_name=True)
-    assert_equal_qt(actual_unit, desired_unit)
+    assert_equal_qt(actual_quantity, desired_quantity)
     assert_equal(actual_name, desired_name)
 
 def testToStandardUnit():
@@ -132,8 +133,15 @@ def testToStandardUnit():
     actual_quantity = to_standard_quantity(quantity)
     assert desired_quantity == actual_quantity
 
+def test_to_standard_quantity_squared():
     quantity = 0.1 * ureg.mV ** 2
     desired_quantity = 0.1 * 1e-6 * ureg.V ** 2
+    actual_quantity = to_standard_quantity(quantity)
+    assert desired_quantity == actual_quantity
+
+def test_to_standard_quantity_psd():
+    quantity = 0.1 * ureg.mA ** 2 / ureg.Hz
+    desired_quantity = 0.1 * 1e-6 * ureg.A ** 2 / ureg.Hz
     actual_quantity = to_standard_quantity(quantity)
     assert desired_quantity == actual_quantity
 
@@ -165,7 +173,7 @@ def test_string_to_dict():
         'material': 'Al',
         'replicate': 2}
     actual_dict = string_to_dict(input_string)
-    assert_equal(actual_dict, desired_dict)
+    assertDataDictEqual(actual_dict, desired_dict)
 
 def test_is_scalar():
     quantity = 5 * ureg.Hz
