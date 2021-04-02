@@ -10,8 +10,9 @@ def assert_equal_qt(actual_data, desired_data):
             isinstance(desired_data, pint.Quantity):
         assert_equal(isinstance(actual_data, pint.Quantity), True)
         assert_equal(isinstance(desired_data, pint.Quantity), True)
-        assert_equal(actual_data.magnitude, desired_data.magnitude)
-        assert actual_data.units == desired_data.units
+        assert_equal(actual_data.to(desired_data.units).magnitude, \
+                desired_data.magnitude)
+        assert actual_data.to(desired_data.units).units == desired_data.units
 
 def assert_allclose_qt(
         actual_data, desired_data, atol=1e-15, rtol=1e-14):
