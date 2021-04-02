@@ -5,9 +5,8 @@ from numpy.testing import assert_equal, assert_allclose
 from sciparse import sampling_period, title_to_quantity, \
          to_standard_quantity, frequency_bin_size, quantity_to_title, \
          dict_to_string, string_to_dict, is_scalar, column_from_unit, \
-         cname_from_unit
+         cname_from_unit, assertDataDictEqual
 from sciparse import assert_allclose_qt, assert_equal_qt, ureg
-from xsugar import assertDataDictEqual
 
 def test_sampling_period():
     data = pd.DataFrame({'Time (ms)': [0, 0.1, 0.2, 0.3, 0.4],
