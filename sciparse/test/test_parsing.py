@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 from pandas.testing import assert_frame_equal
 from numpy.testing import assert_equal
-from sciparse import parse_xrd, parse_default
+from sciparse import parse_xrd, parse_default, ureg
 import os
 
 @pytest.fixture
@@ -62,3 +62,10 @@ def test_load_data(test_dir):
     data_actual, _ = parse_default(filename)
     assert_frame_equal(data_actual, data_desired)
 
+def test_parse_default_save_metadata(test_dir):
+    metadata = {'wavelength': 10*ureg.nm, 'current': 100*ureg.uA}
+    filename = test_dir + 'TEST1~wavelengths-1~temperatures-25.csv'
+    parse_default(filename, metadata=metadata, read_write='w')
+    with open(filename, 'r') as fh:
+        data = fh.readline()
+    assert_equal(data, "{'wavelength (nm)': 10, 'current (µA)': 100}\n")

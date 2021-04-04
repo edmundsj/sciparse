@@ -21,11 +21,13 @@ def parse_default(
 
         return data, metadata
     elif read_write == 'w':
-        with open(filename) as fh:
+        with open(filename, 'w') as fh:
             metadata_line = dict_to_string(metadata) + '\n'
             fh.write(metadata_line)
             if isinstance(data, pd.DataFrame):
                 data.to_csv(fh, mode='a', index=False)
+            elif data is None:
+                pass
             else:
                 raise ValueError(f'This method only implemented for type of pd.DataFrame, you attempted to pass in type {type(data)}.')
 
