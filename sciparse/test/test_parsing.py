@@ -68,7 +68,7 @@ def test_parse_default_save_metadata(test_dir):
     parse_default(filename, metadata=metadata, read_write='w')
     with open(filename, 'r') as fh:
         metadata_actual= fh.readline()
-    metadata_desired = "{'wavelength (nm)': 10, 'current (µA)': 100}\n")
+    metadata_desired = "{'wavelength (nm)': 10, 'current (µA)': 100}\n"
     assert_equal(metadata_actual, metadata_desired)
 
 def test_parse_default_save_data(test_dir):
@@ -80,4 +80,4 @@ def test_parse_default_save_data(test_dir):
     with open(filename, 'r') as fh:
         metadata = fh.readline()
         data_actual = pd.read_csv(fh)
-    assert_equal(data, "{'wavelength (nm)': 10, 'current (µA)': 100}\n")
+    assert_frame_equal(data_actual, data_desired)
