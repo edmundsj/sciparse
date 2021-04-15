@@ -1,5 +1,9 @@
 from numpy.testing import assert_equal, assert_allclose
+from pandas.testing import assert_frame_equal
+import numpy as np
+import pandas as pd
 from sciparse import find_lcr_dataline, parse_lcr_header, parse_lcr
+from sciparse import convert_lcr_to_standard
 import pytest
 import os
 
@@ -66,3 +70,56 @@ def test_parse_data(data):
     desiredBIASData = 8.5
     actualBIASData = data['BIAS'].iloc[6]
     assert_allclose(desiredBIASData, actualBIASData)
+
+def test_convert_data_CP_RP():
+    frequency = 1 / (2*np.pi) * 1000 # 1krad/s
+    test_metadata = {'frequency': frequency}
+    test_data = pd.DataFrame({'CP': [1e-9], 'RP': 1e6})
+    desired_data = pd.DataFrame({
+            'Z (ohm)': [1 / np.sqrt(2) * 1e6],
+            'THETA (rad)': [-np.pi/4]})
+    actual_data = convert_lcr_to_standard(test_data, test_metadata)
+    assert_frame_equal(actual_data, desired_data)
+
+def test_convert_data_CS_RS():
+    frequency = 1 / (2*np.pi) * 1000 # 1krad/s
+    test_metadata = {'frequency': frequency}
+    test_data = pd.DataFrame({'CS': [1e-9], 'RS': 1e6})
+    desired_data = pd.DataFrame({
+            'Z (ohm)': [np.sqrt(2) * 1e6],
+            'THETA (rad)': [-np.pi/4]})
+    actual_data = convert_lcr_to_standard(test_data, test_metadata)
+    assert_frame_equal(actual_data, desired_data)
+
+def test_convert_data_C_Q():
+    frequency = 1 / (2*np.pi) * 1000 # 1krad/s
+    test_metadata = {'frequency': frequency}
+    test_data = pd.DataFrame({'C': [1e-9], 'Q': 1})
+    desired_data = pd.DataFrame({
+            'Z (ohm)': [1 / np.sqrt(2) * 1e6],
+            'THETA (rad)': [-np.pi/4]})
+    actual_data = convert_lcr_to_standard(test_data, test_metadata)
+    assert_frame_equal(actual_data, desired_data)
+
+def test_convert_data_C_D():
+    frequency = 1 / (2*np.pi) * 1000 # 1krad/s
+    test_metadata = {'frequency': frequency}
+    test_data = pd.DataFrame({'C': [1e-9], 'D': 1})
+    desired_data = pd.DataFrame({
+            'Z (ohm)': [1 / np.sqrt(2) * 1e6],
+            'THETA (rad)': [-np.pi/4]})
+    actual_data = convert_lcr_to_standard(test_data, test_metadata)
+    assert_frame_equal(actual_data, desired_data)
+
+def test_convert_raises_no_frequency():
+    with pytest.raises(ValueError):
+        test_data = pd.DataFrame({'C': [1e-9], 'D': 1})
+        test_metadata = {}
+        actual_data = convert_lcr_to_standard(test_data, test_metadata)
+
+def test_convert_raises_wrong_model():
+    with pytest.raises(ValueError):
+        test_data = pd.DataFrame({'CCC': [1e-9], 'D': 1})
+        test_metadata = {}
+        actual_data = convert_lcr_to_standard(test_data, test_metadata)
+

@@ -1,7 +1,7 @@
 import re
 import pandas as pd
 import numpy as np
-from sciparse import string_to_dict, dict_to_string
+from sciparse import string_to_dict, dict_to_string, ureg
 from datetime import datetime as dt
 
 def parse_default(
@@ -157,3 +157,51 @@ def find_lcr_dataline(filename):
                 data_start_line = currentLine + 3
                 return data_start_line
             currentLine += 1
+
+def convert_lcr_to_standard(data, metadata):
+    """
+    Converts an LCR dataset into standard form (Z, theta).
+
+    :param data: Pandas DataFrame containing LCR data in a potentially non-standard form (Cp/Q, Cp/D, Cp/Rp for example)
+    """
+    columns = data.columns.values
+    if 'frequency' not in metadata and 'f' not in metadata:
+        raise ValueError(f'Frequency not in metadata. Metadata contains {metadata}')
+    f = metadata['frequency']
+    w = 2*np.pi*f
+    new_data = data.copy()
+
+    if 'Z' in columns and 'THETA' in columns:
+        Z = data['Z']
+        theta = data['THETA']
+        del new_data['Z'], new_data['THETA']
+    elif 'C' in columns and 'Q' in columns:# C assumed to be Cp
+        Q = new_data['Q']
+        Cp = new_data['C']
+        Z = 1 / (w*Cp) * 1 / np.sqrt(1 + 1/(Q**2))
+        theta = -np.arctan(Q)
+        del new_data['Q'], new_data['C']
+    elif 'C' in columns and 'D' in columns: # D = 1/Q. C assumed Cp
+        D = data['D']
+        Cp = data['C']
+        Z = 1 / (w*Cp) * 1 / np.sqrt(1 + (D**2))
+        theta = -np.arctan(1 / D)
+        del new_data['D'], new_data['C']
+    elif 'CP' in columns and 'RP' in columns:
+        Rp = data['RP']
+        Cp = data['CP']
+        Z = 1 / np.sqrt((w*Cp)**2 + 1 / Rp**2)
+        theta = -np.arctan(w*Rp*Cp)
+        del new_data['RP'], new_data['CP']
+    elif 'CS' in columns and 'RS' in columns:
+        Rs = data['RS']
+        Cs = data['CS']
+        Z = np.sqrt(Rs**2 + 1/((w*Cs)**2))
+        theta = -np.arctan(1 / (w*Rs*Cs))
+        del new_data['RS'], new_data['CS']
+    else:
+        raise ValueError(f'Columns did not match any available impedance models. Available models are CP/Q, CP/D, CP/RP, CS/RS. Column of data are {columns}')
+
+    new_data['Z (ohm)'] = Z
+    new_data['THETA (rad)'] = theta
+    return new_data
