@@ -195,6 +195,9 @@ def dict_to_string(metadata):
         if isinstance(v, pint.Quantity):
             name_string = quantity_to_title(v, name=k)
             value = v.magnitude
+        elif isinstance(v, pint.Unit):
+            name_string = k
+            value = str(v)
         else:
             name_string = str(k)
             value = v
