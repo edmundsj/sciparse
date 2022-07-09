@@ -6,7 +6,7 @@ from pandas import DataFrame
 import warnings
 from itertools import zip_longest
 
-def assert_equal_qt(actual_data, desired_data):
+def assert_equal_qt(actual_data, desired_data, atol=1e-6, rtol=1e-6):
     if isinstance(actual_data, np.ndarray):
         assert_equal(actual_data, desired_data)
     elif isinstance(actual_data, pint.Quantity) or \
@@ -32,19 +32,18 @@ def assert_allclose_qt(
         assert actual_data.units == desired_data.units
 
 def assertDataDictEqual(data_dict_actual, data_dict_desired):
+# Check that they have the exact same set of keys
     assert_equal(type(data_dict_actual), dict)
     assert_equal(type(data_dict_desired), dict)
-    for actual_name, desired_name in \
-        zip_longest(data_dict_actual.keys(),
-                    data_dict_desired.keys()):
-        assert_equal(actual_name, desired_name)
+    actual_keys = set(data_dict_actual.keys())
+    desired_keys = set(data_dict_desired.keys())
+    assert_equal(actual_keys, desired_keys)
 
-    for actual_data, desired_data in \
-         zip_longest(data_dict_actual.values(),
-                     data_dict_desired.values()):
-        if isinstance(actual_data, DataFrame):
-            assert_frame_equal(actual_data, desired_data)
-        elif isinstance(actual_data, dict):
-            assertDataDictEqual(actual_data, desired_data)
+    for actual_key, actual_val in data_dict_actual.items():
+        desired_val = data_dict_desired[actual_key]
+        if isinstance(actual_val, DataFrame):
+            assert_frame_equal(actual_val, desired_val)
+        elif isinstance(actual_val, dict):
+            assertDataDictEqual(actual_val, desired_val)
         else:
-            assert_equal_qt(actual_data, desired_data)
+            assert_equal_qt(actual_val, desired_val)

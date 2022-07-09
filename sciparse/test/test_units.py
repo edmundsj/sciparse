@@ -207,6 +207,13 @@ def test_is_scalar():
     data_scalar_desired = False
     assert_equal(data_scalar_actual, data_scalar_desired)
 
+def test_is_scalar_complex():
+
+    quantity = (1 + 2j) * ureg.ohm
+    data_scalar_actual = is_scalar(quantity)
+    data_scalar_desired = True
+    assert_equal(data_scalar_actual, data_scalar_desired)
+
 def test_column_from_unit():
     input_data = pd.DataFrame({
         'Time (ms)': [0, 1, 2, 3],

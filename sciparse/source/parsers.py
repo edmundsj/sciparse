@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from sciparse import string_to_dict, dict_to_string, ureg
 from datetime import datetime as dt
+import pint
 
 def parse_default(
         filename, data=None, metadata=None, read_write='r'):
@@ -105,6 +106,7 @@ def parse_lcr(filename):
             for i, dtype in enumerate(data_types):
                 new_data_row[dtype] = [line_data[i]]
             data = data.append(new_data_row)
+
     return data, metadata
 
 def parse_lcr_header(filename):
@@ -168,12 +170,14 @@ def convert_lcr_to_standard(data, metadata):
     if 'frequency' not in metadata and 'f' not in metadata:
         raise ValueError(f'Frequency not in metadata. Metadata contains {metadata}')
     f = metadata['frequency']
+    if isinstance(f, pint.Quantity):
+        f = f.to(ureg.Hz).m
     w = 2*np.pi*f
     new_data = data.copy()
 
     if 'Z' in columns and 'THETA' in columns:
         Z = data['Z']
-        theta = data['THETA']
+        theta = data['THETA']*np.pi / 180
         del new_data['Z'], new_data['THETA']
     elif 'C' in columns and 'Q' in columns:# C assumed to be Cp
         Q = new_data['Q']
@@ -204,4 +208,10 @@ def convert_lcr_to_standard(data, metadata):
 
     new_data['Z (ohm)'] = Z
     new_data['THETA (rad)'] = theta
+    new_data = new_data.rename(
+            columns={
+            'VM': 'VM (V)',
+            'IM': 'IM (A)',
+            'BIAS': 'BIAS (V)',
+            })
     return new_data

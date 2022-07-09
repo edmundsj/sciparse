@@ -2,6 +2,7 @@ import pint
 import re
 from ast import literal_eval
 from sciparse import ureg
+import numpy as np
 
 def sampling_period(data):
     """
@@ -179,9 +180,10 @@ def to_standard_quantity(quantity):
     return new_quantity
 
 def is_scalar(quantity):
-    data_is_scalar =  isinstance(quantity, (int, float))
+    data_is_scalar =  isinstance(quantity,
+            (int, float, complex, np.float, np.integer, np.complex))
     if isinstance(quantity, pint.Quantity):
-        data_is_scalar = isinstance(quantity.magnitude, (int, float))
+        data_is_scalar = isinstance(quantity.magnitude, (int, float, complex))
     return data_is_scalar
 
 def dict_to_string(metadata):
